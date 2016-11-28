@@ -72,6 +72,7 @@ public class RenderSeedStorage extends RenderBlockCustomWood<BlockSeedStorage, T
         tess.draw();
         renderItemStack(seed, dx, dy, dz, f, false);
         tess.startDrawingQuads(format);
+        tess.pushMatrix();
     }
 
     @Override
@@ -79,9 +80,8 @@ public class RenderSeedStorage extends RenderBlockCustomWood<BlockSeedStorage, T
             TileEntitySeedStorage tile, TextureAtlasSprite icon, boolean dynamic) {
         tess.pushMatrix();
         rotateBlock(tess, tile.getOrientation().getOpposite());
-        if (dynamic) {
-            drawSeed(tess, tile.getLockedSeed());
-            tess.pushMatrix();
+        if (dynamic && tile.getLockedSeed().isPresent()) {
+            drawSeed(tess, tile.getLockedSeed().get().toStack());
         } else {
             renderSides(tess, icon);
         }

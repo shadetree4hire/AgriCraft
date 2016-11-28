@@ -6,6 +6,9 @@ import com.infinityraider.agricraft.config.AgriCraftConfig;
 import com.infinityraider.agricraft.handler.GuiHandler;
 import com.infinityraider.agricraft.renderers.blocks.RenderSeedStorage;
 import com.infinityraider.agricraft.blocks.tiles.storage.TileEntitySeedStorage;
+import com.infinityraider.agricraft.utility.AgriWorldHelper;
+import com.infinityraider.agricraft.utility.StackHelper;
+import java.util.Collections;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -21,10 +24,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.List;
 
 public class BlockSeedStorage extends BlockCustomWood<TileEntitySeedStorage> {
-	public BlockSeedStorage() {
-		super("seed_storage");
-	}
-	
+
+    public BlockSeedStorage() {
+        super("seed_storage");
+    }
+
     @Override
     public TileEntitySeedStorage createNewTileEntity(World world, int meta) {
         return new TileEntitySeedStorage();
@@ -40,21 +44,14 @@ public class BlockSeedStorage extends BlockCustomWood<TileEntitySeedStorage> {
 
     @Override
     public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
-        List<ItemStack> items = super.getDrops(world, pos, state, fortune);
-        TileEntity te = world.getTileEntity(pos);
-        if (te != null && (te instanceof TileEntitySeedStorage)) {
-            TileEntitySeedStorage storage = (TileEntitySeedStorage) te;
-            for (ItemStack stack : storage.getInventory()) {
-                int total = stack.stackSize;
-                while (total > 0) {
-                    ItemStack newStack = stack.copy();
-                    newStack.stackSize = Math.min(total, 64);
-                    total = total - newStack.stackSize;
-                    items.add(newStack);
-                }
-            }
-        }
-
+        final List<ItemStack> items = super.getDrops(world, pos, state, fortune);
+        AgriWorldHelper
+                .getTile(world, pos, TileEntitySeedStorage.class)
+                .map(t -> (List<ItemStack>) t.getInventory())
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(StackHelper::fitToMaxSize)
+                .forEach(items::addAll);
         return items;
     }
 
@@ -77,8 +74,8 @@ public class BlockSeedStorage extends BlockCustomWood<TileEntitySeedStorage> {
     }
 
     @Override
-	public boolean isEnabled() {
-		return !AgriCraftConfig.disableSeedStorage;
-	}
-    
+    public boolean isEnabled() {
+        return !AgriCraftConfig.disableSeedStorage;
+    }
+
 }
